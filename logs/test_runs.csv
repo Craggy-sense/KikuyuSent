@@ -1,0 +1,2 @@
+evaluated_at,dataset_version,model,data_sha256,model_sha256,accuracy,macro_f1
+before 2026-11-11 (commit d8f04d7),v1,word_char_lr,see data/v1,see models/v1,0.6667,0.6639

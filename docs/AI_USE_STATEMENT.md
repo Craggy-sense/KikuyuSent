@@ -1,39 +1,18 @@
 # AI Use Statement
 
-## Project
+| Tool | Used for | Not used for |
+|---|---|---|
+| ChatGPT | Early Python scripts and debugging, first drafts of documentation and README. `[TO FILL: and/or drafting the English situation list in english_prompt? State yes or no.]` | Writing, translating or labelling Kikuyu sentences |
+| Claude (Anthropic) | Project planning and workflow; repository review; v1.1 restructuring (starter-kit schema, `tools/prepare_dataset.py`, validator wrapper, dev-only model comparison, logged test evaluation, demo examples tab); documentation templates | Writing, translating or labelling Kikuyu sentences; reviewer decisions |
 
-KikuyuSent – Strathmore NLP Hub Datathon 2026, Track B.
+## What humans did
 
-## Use of AI Assistance
+- Wrote every Kikuyu sentence: `[TO FILL: who]`.
+- Assigned every label, and reviewed every sentence independently (T05-E1).
+- Made all v1.1 decisions in `review/v1.1_checks.csv` (fluent speakers only).
+- Wrote the error-analysis explanations in `docs/QUALITY_REPORT.md` §5.
+- Checked and ran all AI-assisted code. Every reported number comes from an actual run (`results/*.json`, `logs/test_runs.csv`).
 
-The team used ChatGPT as an AI-assisted development and documentation tool.
+## Flags raised by AI review
 
-AI assistance supported:
-
-- Python script development and debugging.
-- Dataset validation workflow development.
-- Machine-learning baseline implementation.
-- Model evaluation and comparison.
-- Streamlit application development.
-- Documentation drafting and organisation.
-- README preparation.
-
-## Human Contributions
-
-Human team members were responsible for the Kikuyu data collection, language review, sentiment verification and project decisions.
-
-All 300 dataset examples were independently reviewed by a second Kikuyu speaker.
-
-Five representative test-set model errors were also individually checked with a Kikuyu reviewer. The reviewer confirmed the original labels and sentences.
-
-## AI Output Verification
-
-AI-generated code and documentation were reviewed and tested as part of the project workflow.
-
-Model metrics reported in the project documentation are based on actual evaluation runs.
-
-AI assistance was not treated as a substitute for Kikuyu language expertise or independent human review.
-
-## Transparency
-
-The team acknowledges the use of AI assistance in development and documentation and will explain its contribution during project presentation and assessment.
+During the v1.1 review, the assistant flagged possible label/meaning mismatches. Because it is not a fluent Kikuyu speaker, it did not change any text or label. Each flag was decided by the human reviewer.
