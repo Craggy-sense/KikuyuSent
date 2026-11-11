@@ -1,20 +1,16 @@
-import joblib
+"""Predict the sentiment of one Kikuyu sentence from the command line.
+
+Usage: python predict.py "Ndĩmũkenu mũno"
+"""
 import sys
 
-MODEL_PATH = "models/sentiment_model.joblib"
+import joblib
+
+from pipeline import MODEL_PATH
 
 model = joblib.load(MODEL_PATH)
-
-if len(sys.argv) > 1:
-    text = " ".join(sys.argv[1:]).strip()
-else:
-    text = input("Enter Kikuyu text: ").strip()
-
+text = ' '.join(sys.argv[1:]).strip() or input('Enter Kikuyu text: ').strip()
 if not text:
-    raise SystemExit("Please enter some text.")
-
-prediction = model.predict([text])[0]
-
-print(f"\nText: {text}")
-print(f"Predicted sentiment: {prediction}")
-print("\nNote: This is an experimental prediction, not a verified result.")
+    raise SystemExit('Please enter some text.')
+print(f'Text: {text}\nPredicted sentiment: {model.predict([text])[0]}')
+print('Note: experimental prediction, not a verified interpretation.')

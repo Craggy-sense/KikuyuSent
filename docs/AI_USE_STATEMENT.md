@@ -1,39 +1,15 @@
 # AI Use Statement
 
-## Project
+| Tool | Used for | Not used for |
+|---|---|---|
+| ChatGPT | Early Python scripts and debugging; first drafts of documentation and README | Writing, translating or labelling Kikuyu sentences; writing the English prompts |
+| Claude (Anthropic) | Planning the workflow; repository review; v1.1 restructuring (starter-kit schema, `tools/prepare_dataset.py`, validator wrapper, dev-only model comparison, logged test evaluation, demo examples tab); final documentation; drafting the error-analysis explanations from the model's feature weights and training-word counts | Writing, translating or labelling Kikuyu sentences; deciding whether any sentence or label was correct |
 
-KikuyuSent – Strathmore NLP Hub Datathon 2026, Track B.
+## What humans did
 
-## Use of AI Assistance
-
-The team used ChatGPT as an AI-assisted development and documentation tool.
-
-AI assistance supported:
-
-- Python script development and debugging.
-- Dataset validation workflow development.
-- Machine-learning baseline implementation.
-- Model evaluation and comparison.
-- Streamlit application development.
-- Documentation drafting and organisation.
-- README preparation.
-
-## Human Contributions
-
-Human team members were responsible for the Kikuyu data collection, language review, sentiment verification and project decisions.
-
-All 300 dataset examples were independently reviewed by a second Kikuyu speaker.
-
-Five representative test-set model errors were also individually checked with a Kikuyu reviewer. The reviewer confirmed the original labels and sentences.
-
-## AI Output Verification
-
-AI-generated code and documentation were reviewed and tested as part of the project workflow.
-
-Model metrics reported in the project documentation are based on actual evaluation runs.
-
-AI assistance was not treated as a substitute for Kikuyu language expertise or independent human review.
-
-## Transparency
-
-The team acknowledges the use of AI assistance in development and documentation and will explain its contribution during project presentation and assessment.
+- Wrote the English prompts.
+- Produced every Kikuyu sentence: written by team members, collected from conversations with Kikuyu speakers, or contributed by invited speakers.
+- Assigned and cross-reviewed every label; outside fluent speakers also reviewed.
+- Decided all 11 v1.1 re-check rows (T05-A, fluent speaker). The AI flagged possible mismatches by comparing against the English, but changed nothing.
+- Checked the error-analysis explanations against the Kikuyu.
+- Ran and checked all code. Every reported number comes from an actual run (`results/*.json`, `logs/test_runs.csv`).

@@ -1,82 +1,28 @@
-import os
+"""Train the selected model on the train split and save it.
+
+Usage: python train.py
+Writes models/sentiment_model.joblib and models/model_info.json.
+"""
+import json
+from datetime import datetime, timezone
+
 import joblib
-import pandas as pd
+import sklearn
 
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from pipeline import DATA_PATH, DESCRIPTIONS, LABELS, MODEL_INFO, MODEL_PATH, MODELS, SELECTED_MODEL, load, sha256_file
 
-DATA_PATH = "data/kikuyu_dataset.csv"
-MODEL_PATH = "models/sentiment_model.joblib"
+train = load('train')
+if set(train.label) != set(LABELS):
+    raise SystemExit('Training data must contain all three labels.')
 
-REVIEW_STATUS = "independently_reviewed_second_speaker_confirmed"
-
-df = pd.read_csv(DATA_PATH)
-
-required_columns = ["text", "label", "review_status", "split"]
-missing = [col for col in required_columns if col not in df.columns]
-
-if missing:
-    raise ValueError(f"Missing required columns: {missing}")
-
-train_df = df[
-    (df["split"] == "train") &
-    (df["review_status"] == REVIEW_STATUS)
-].copy()
-
-train_df = train_df.dropna(subset=["text", "label"])
-
-if len(train_df) != 180:
-    raise ValueError(
-        f"Expected 180 reviewed training records, found {len(train_df)}"
-    )
-
-X_train = train_df["text"].astype(str)
-y_train = train_df["label"].astype(str)
-
-expected_labels = {"positive", "negative", "neutral"}
-
-if set(y_train.unique()) != expected_labels:
-    raise ValueError("Training data must contain all three sentiment labels.")
-
-features = FeatureUnion([
-    (
-        "word_tfidf",
-        TfidfVectorizer(
-            analyzer="word",
-            ngram_range=(1, 2),
-            sublinear_tf=True
-        )
-    ),
-    (
-        "char_tfidf",
-        TfidfVectorizer(
-            analyzer="char_wb",
-            ngram_range=(2, 5),
-            sublinear_tf=True
-        )
-    )
-])
-
-model = Pipeline([
-    ("features", features),
-    (
-        "classifier",
-        LogisticRegression(
-            max_iter=2000,
-            class_weight="balanced",
-            random_state=42
-        )
-    )
-])
-
-model.fit(X_train, y_train)
-
-os.makedirs("models", exist_ok=True)
+model = MODELS[SELECTED_MODEL]().fit(train.text, train.label)
+MODEL_PATH.parent.mkdir(exist_ok=True)
 joblib.dump(model, MODEL_PATH)
 
-print(f"Training records used: {len(train_df)}")
-print("\nTraining label counts:")
-print(y_train.value_counts())
-print(f"\nModel saved to: {MODEL_PATH}")
-print("Word + character TF-IDF training completed successfully.")
+info = dict(model=SELECTED_MODEL, description=DESCRIPTIONS[SELECTED_MODEL], train_records=len(train),
+            train_label_counts=train.label.value_counts().to_dict(), data_sha256=sha256_file(DATA_PATH),
+            model_sha256=sha256_file(MODEL_PATH), sklearn_version=sklearn.__version__,
+            trained_at=datetime.now(timezone.utc).isoformat(timespec='seconds'))
+MODEL_INFO.write_text(json.dumps(info, indent=2), encoding='utf-8')
+print(f"Trained {SELECTED_MODEL} on {len(train)} records {info['train_label_counts']}")
+print(f'Saved {MODEL_PATH.name} and {MODEL_INFO.name}')

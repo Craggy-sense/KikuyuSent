@@ -1,105 +1,65 @@
+"""Validate data/kikuyu_dataset.csv.
 
-import sys
+1. Runs the official starter-kit validator (kit/validate.py, sentiment track).
+2. Adds team checks the kit does not cover: exact 100/100/100 balance,
+   accent-insensitive near-duplicates, orthography summary, provenance status.
+
+Usage: python validate.py [path]
+"""
+import re, sys, unicodedata
+from pathlib import Path
+
 import pandas as pd
 
-VALID_LABELS = {"positive", "negative", "neutral"}
-VALID_SPLITS = {"train", "dev", "test"}
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'kit'))
+from validate import check as kit_check  # noqa: E402  (kit/validate.py)
 
-REQUIRED_COLUMNS = {
-    "record_id",
-    "text",
-    "label",
-    "english_prompt",
-    "review_status",
-    "split"
-}
-
-EXPECTED_COUNTS = {
-    "train": 180,
-    "dev": 60,
-    "test": 60
-}
-
-CONFIRMED_REVIEW_STATUS = (
-    "independently_reviewed_second_speaker_confirmed"
-)
+from pipeline import DATA_PATH, LABELS, ROOT  # noqa: E402
 
 
-def validate_dataset(path):
-    df = pd.read_csv(path, dtype=str).fillna("")
-    errors = []
+def base(s):
+    s = unicodedata.normalize('NFD', s.casefold())
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r'\s+', ' ', re.sub(r'[^\w\s]', '', s)).strip()
 
-    missing = REQUIRED_COLUMNS - set(df.columns)
 
-    if missing:
-        print("Missing columns:", ", ".join(sorted(missing)))
+def main(path):
+    problems, notes = [], []
+    try:
+        df = kit_check(path, practice=False, track='sentiment')
+        print(f'Starter-kit validator: PASS ({len(df)} records)')
+    except ValueError as e:
+        print(f'Starter-kit validator: FAIL - {e}')
         return 1
 
-    for col in ["record_id", "text", "label", "review_status", "split"]:
-        blank = df[col].str.strip().eq("")
-        if blank.any():
-            errors.append(f"{col}: {int(blank.sum())} blank values")
+    counts = pd.crosstab(df.label, df.split)
+    print('\n' + counts.to_string())
+    if sorted(df.label.value_counts().tolist()) != [100, 100, 100]:
+        notes.append('label totals are not exactly 100/100/100')
 
-    if df["record_id"].duplicated().any():
-        errors.append("Duplicate record IDs found")
+    key = df.text.map(base)
+    dups = df[key.duplicated(keep=False)]
+    for _, g in dups.groupby(key[dups.index]):
+        if g.group_id.nunique() > 1:
+            problems.append('near-duplicates in different groups: ' + ', '.join(g.record_id))
+        else:
+            print('Known issue (documented): near-duplicate pair kept in one group/split: ' + ', '.join(g.record_id))
 
-    if df["text"].str.strip().duplicated().any():
-        errors.append("Duplicate Kikuyu texts found")
+    if 'orthography' in df:
+        print('\nOrthography (how vowels are marked):', df.orthography.value_counts().to_dict())
 
-    labels = df["label"].str.strip().str.lower()
-    splits = df["split"].str.strip().str.lower()
+    pmap = pd.read_csv(ROOT / 'data' / 'provenance_map.csv', dtype=str, keep_default_na=False)
+    if (pmap.confirmed.str.lower() != 'yes').any():
+        notes.append('data/provenance_map.csv not confirmed yet')
 
-    if not set(labels).issubset(VALID_LABELS):
-        errors.append("Invalid sentiment labels found")
-
-    if not set(splits).issubset(VALID_SPLITS):
-        errors.append("Invalid split names found")
-
-    if not (df["review_status"].str.strip() ==
-            CONFIRMED_REVIEW_STATUS).all():
-        errors.append("Some records lack confirmed second-speaker review")
-
-    if len(df) != 300:
-        errors.append(f"Expected 300 records; found {len(df)}")
-
-    if set(labels) != VALID_LABELS:
-        errors.append("Dataset must contain all three sentiment classes")
-
-    print(f"\nDataset: {path}")
-    print(f"Total records: {len(df)}")
-
-    print("\nSentiment counts:")
-    print(labels.value_counts().to_string())
-
-    print("\nSplit counts:")
-    print(splits.value_counts().to_string())
-
-    print("\nSentiment distribution by split:")
-    print(pd.crosstab(splits, labels).to_string())
-
-    for split, expected in EXPECTED_COUNTS.items():
-        actual = int((splits == split).sum())
-        if actual != expected:
-            errors.append(
-                f"{split}: expected {expected}, found {actual}"
-            )
-
-    if errors:
-        print("\nVALIDATION ISSUES:")
-        for error in errors:
-            print("-", error)
+    for p in problems: print('PROBLEM:', p)
+    for n in notes: print('NOTE:', n)
+    if problems:
         return 1
-
-    print("\nBasic dataset validation passed.")
-    print("Second-speaker review status confirmed for all records.")
-    print("Consent and source provenance should be documented separately.")
-
+    print('\nValidation passed' + (' (with notes above).' if notes else '.'))
+    print('Fluent review, permission evidence and semantic duplicates remain human responsibilities.')
     return 0
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python validate.py data/kikuyu_dataset.csv")
-        sys.exit(2)
-
-    sys.exit(validate_dataset(sys.argv[1]))
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else str(DATA_PATH)))
