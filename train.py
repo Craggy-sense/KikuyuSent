@@ -1,70 +1,82 @@
-from pathlib import Path
-import pandas as pd
+import os
 import joblib
+import pandas as pd
 
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 
-DATA_PATH = Path("data/contribution.csv")
-MODEL_PATH = Path("models/sentiment_model.joblib")
+DATA_PATH = "data/kikuyu_dataset.csv"
+MODEL_PATH = "models/sentiment_model.joblib"
 
-def main():
-    if not DATA_PATH.exists():
-        raise SystemExit(f"Dataset not found: {DATA_PATH}")
+REVIEW_STATUS = "independently_reviewed_second_speaker_confirmed"
 
-    df = pd.read_csv(DATA_PATH, dtype=str).fillna("")
+df = pd.read_csv(DATA_PATH)
 
-    required = {"text", "label", "consent", "review_status", "split"}
-    missing = required - set(df.columns)
-    if missing:
-        raise SystemExit(f"Missing columns: {sorted(missing)}")
+required_columns = ["text", "label", "review_status", "split"]
+missing = [col for col in required_columns if col not in df.columns]
 
-    # Train only on accepted, consent-confirmed training records.
-    df["label"] = df["label"].str.strip().str.lower()
-    df["split"] = df["split"].str.strip().str.lower()
+if missing:
+    raise ValueError(f"Missing required columns: {missing}")
 
-    train = df[
-        (df["split"] == "train")
-        & (df["consent"].str.strip().str.lower() == "yes")
-        & (df["review_status"].str.strip().str.lower() == "accepted")
-        & (df["text"].str.strip() != "")
-        & (df["label"].isin(["positive", "negative", "neutral"]))
-    ].copy()
+train_df = df[
+    (df["split"] == "train") &
+    (df["review_status"] == REVIEW_STATUS)
+].copy()
 
-    if train.empty:
-        raise SystemExit("No eligible training records found.")
+train_df = train_df.dropna(subset=["text", "label"])
 
-    if train["label"].nunique() < 2:
-        raise SystemExit(
-            "Need at least two sentiment classes to train. "
-            "Add more reviewed training records."
-        )
+if len(train_df) != 180:
+    raise ValueError(
+        f"Expected 180 reviewed training records, found {len(train_df)}"
+    )
 
-    model = Pipeline([
-        ("tfidf", TfidfVectorizer(
-            analyzer="char",
-            ngram_range=(2, 5),
-            lowercase=True,
+X_train = train_df["text"].astype(str)
+y_train = train_df["label"].astype(str)
+
+expected_labels = {"positive", "negative", "neutral"}
+
+if set(y_train.unique()) != expected_labels:
+    raise ValueError("Training data must contain all three sentiment labels.")
+
+features = FeatureUnion([
+    (
+        "word_tfidf",
+        TfidfVectorizer(
+            analyzer="word",
+            ngram_range=(1, 2),
             sublinear_tf=True
-        )),
-        ("classifier", LogisticRegression(
+        )
+    ),
+    (
+        "char_tfidf",
+        TfidfVectorizer(
+            analyzer="char_wb",
+            ngram_range=(2, 5),
+            sublinear_tf=True
+        )
+    )
+])
+
+model = Pipeline([
+    ("features", features),
+    (
+        "classifier",
+        LogisticRegression(
             max_iter=2000,
             class_weight="balanced",
             random_state=42
-        ))
-    ])
+        )
+    )
+])
 
-    model.fit(train["text"], train["label"])
+model.fit(X_train, y_train)
 
-    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(model, MODEL_PATH)
+os.makedirs("models", exist_ok=True)
+joblib.dump(model, MODEL_PATH)
 
-    print(f"Training records used: {len(train)}")
-    print("Training label counts:")
-    print(train["label"].value_counts().to_string())
-    print(f"\nModel saved to: {MODEL_PATH}")
-    print("This is a baseline model, not evidence of good performance.")
-
-if __name__ == "__main__":
-    main()
+print(f"Training records used: {len(train_df)}")
+print("\nTraining label counts:")
+print(y_train.value_counts())
+print(f"\nModel saved to: {MODEL_PATH}")
+print("Word + character TF-IDF training completed successfully.")

@@ -1,68 +1,105 @@
+
 import sys
 import pandas as pd
 
 VALID_LABELS = {"positive", "negative", "neutral"}
 VALID_SPLITS = {"train", "dev", "test"}
+
 REQUIRED_COLUMNS = {
-    "record_id", "text", "label", "source_type",
-    "consent", "review_status", "split"
+    "record_id",
+    "text",
+    "label",
+    "english_prompt",
+    "review_status",
+    "split"
 }
+
+EXPECTED_COUNTS = {
+    "train": 180,
+    "dev": 60,
+    "test": 60
+}
+
+CONFIRMED_REVIEW_STATUS = (
+    "independently_reviewed_second_speaker_confirmed"
+)
+
 
 def validate_dataset(path):
     df = pd.read_csv(path, dtype=str).fillna("")
     errors = []
 
-    missing_columns = REQUIRED_COLUMNS - set(df.columns)
-    if missing_columns:
-        print("Missing columns:", ", ".join(sorted(missing_columns)))
+    missing = REQUIRED_COLUMNS - set(df.columns)
+
+    if missing:
+        print("Missing columns:", ", ".join(sorted(missing)))
         return 1
 
-    for col in ["record_id", "text", "label", "consent",
-                "review_status", "split"]:
+    for col in ["record_id", "text", "label", "review_status", "split"]:
         blank = df[col].str.strip().eq("")
         if blank.any():
-            errors.append(f"{col}: {int(blank.sum())} blank value(s)")
+            errors.append(f"{col}: {int(blank.sum())} blank values")
 
     if df["record_id"].duplicated().any():
-        errors.append("Duplicate record_id values found")
+        errors.append("Duplicate record IDs found")
 
     if df["text"].str.strip().duplicated().any():
-        errors.append("Duplicate text values found; review possible duplicates")
+        errors.append("Duplicate Kikuyu texts found")
 
-    invalid_labels = set(df["label"].str.strip().str.lower()) - VALID_LABELS
-    if invalid_labels:
-        errors.append(f"Invalid labels: {sorted(invalid_labels)}")
+    labels = df["label"].str.strip().str.lower()
+    splits = df["split"].str.strip().str.lower()
 
-    invalid_splits = set(df["split"].str.strip().str.lower()) - VALID_SPLITS
-    if invalid_splits:
-        errors.append(f"Invalid splits: {sorted(invalid_splits)}")
+    if not set(labels).issubset(VALID_LABELS):
+        errors.append("Invalid sentiment labels found")
 
-    if (df["consent"].str.strip().str.lower() != "yes").any():
-        errors.append("Some records lack confirmed consent")
+    if not set(splits).issubset(VALID_SPLITS):
+        errors.append("Invalid split names found")
 
-    if (df["review_status"].str.strip().str.lower() != "accepted").any():
-        errors.append("Some records have not been accepted by reviewers")
+    if not (df["review_status"].str.strip() ==
+            CONFIRMED_REVIEW_STATUS).all():
+        errors.append("Some records lack confirmed second-speaker review")
 
-    print(f"\nFile: {path}")
+    if len(df) != 300:
+        errors.append(f"Expected 300 records; found {len(df)}")
+
+    if set(labels) != VALID_LABELS:
+        errors.append("Dataset must contain all three sentiment classes")
+
+    print(f"\nDataset: {path}")
     print(f"Total records: {len(df)}")
-    print("\nLabel counts:")
-    print(df["label"].value_counts().to_string())
+
+    print("\nSentiment counts:")
+    print(labels.value_counts().to_string())
+
     print("\nSplit counts:")
-    print(df["split"].value_counts().to_string())
+    print(splits.value_counts().to_string())
+
+    print("\nSentiment distribution by split:")
+    print(pd.crosstab(splits, labels).to_string())
+
+    for split, expected in EXPECTED_COUNTS.items():
+        actual = int((splits == split).sum())
+        if actual != expected:
+            errors.append(
+                f"{split}: expected {expected}, found {actual}"
+            )
 
     if errors:
         print("\nVALIDATION ISSUES:")
         for error in errors:
-            print(f"- {error}")
-        print("\nPlease review these issues before training.")
+            print("-", error)
         return 1
 
-    print("\nBasic validation passed.")
-    print("This does not replace human translation, consent, or quality review.")
+    print("\nBasic dataset validation passed.")
+    print("Second-speaker review status confirmed for all records.")
+    print("Consent and source provenance should be documented separately.")
+
     return 0
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: python validate.py data/contribution.csv")
+        print("Usage: python validate.py data/kikuyu_dataset.csv")
         sys.exit(2)
+
     sys.exit(validate_dataset(sys.argv[1]))
