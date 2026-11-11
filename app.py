@@ -1,41 +1,24 @@
+"""KikuyuSent demo. Run: python -m streamlit run app.py"""
+import json
 from pathlib import Path
 
 import joblib
+import pandas as pd
 import streamlit as st
 
-MODEL_PATH = Path("models/sentiment_model.joblib")
+ROOT = Path(__file__).resolve().parent
+MODEL_PATH = ROOT / 'models' / 'sentiment_model.joblib'
+METRICS = ROOT / 'results' / 'test_metrics.json'
+PREDICTIONS = ROOT / 'results' / 'test_predictions.csv'
+STYLE = {'positive': ('😊', 'Positive', st.success), 'negative': ('😟', 'Negative', st.error),
+         'neutral': ('😐', 'Neutral', st.info)}
 
-st.set_page_config(
-    page_title="KikuyuSent | Team Zeus",
-    page_icon="💬",
-    layout="centered"
-)
-
-st.title("💬 KikuyuSent")
-st.subheader("Kikuyu Language Sentiment Analyser")
-
-st.write(
-    "Enter a sentence in Kikuyu (Gĩkũyũ) to analyse "
-    "whether its expressed sentiment is positive, negative or neutral."
-)
-
-st.info(
-    "Experimental research prototype trained on 180 independently "
-    "reviewed Kikuyu records. Held-out test accuracy: 66.67%; "
-    "macro-F1: 0.6639 (60 test records)."
-)
-
-st.warning(
-    "Predictions are machine-generated and may be incorrect. "
-    "They should not be treated as verified interpretations "
-    "of Kikuyu language or meaning."
-)
+st.set_page_config(page_title='KikuyuSent | Team Zeus', page_icon='💬', layout='centered')
+st.title('💬 KikuyuSent')
+st.subheader('Kikuyu (Gĩkũyũ) sentence sentiment: positive, negative or neutral')
 
 if not MODEL_PATH.exists():
-    st.error(
-        "Trained model not found. Run `python train.py` "
-        "from the project directory first."
-    )
+    st.error('Trained model not found. Run `python train.py` first.')
     st.stop()
 
 
@@ -44,78 +27,50 @@ def load_model():
     return joblib.load(MODEL_PATH)
 
 
-try:
-    model = load_model()
-except Exception as error:
-    st.error(f"Could not load the trained model: {error}")
-    st.stop()
+model = load_model()
+
+if METRICS.exists():
+    m = json.loads(METRICS.read_text(encoding='utf-8'))
+    c1, c2, c3 = st.columns(3)
+    c1.metric('Test accuracy', f"{m['accuracy']:.1%}")
+    c2.metric('Test macro-F1', f"{m['macro_f1']:.3f}")
+    c3.metric('Always-one-label macro-F1', f"{m['majority_baseline']['macro_f1']:.3f}")
+    st.caption(f"{m['correct']} of {m['records']} held-out test sentences correct · model: {m['model']}")
+st.warning('Experimental prototype trained on 180 human-written, independently reviewed Kikuyu sentences. '
+           'Predictions can be wrong and are not verified interpretations of Kikuyu.')
 
 
-st.markdown("### Analyse a sentence")
+def show(pred):
+    icon, name, box = STYLE.get(pred, ('💬', str(pred).title(), st.info))
+    box(f'{icon} **{name}**')
 
-user_text = st.text_area(
-    "Kikuyu text",
-    placeholder="Andika gĩkũyũ haha...",
-    height=150,
-    help="Enter the Kikuyu sentence you want to analyse."
-)
 
-analyse = st.button(
-    "Analyse sentiment",
-    type="primary",
-    use_container_width=True
-)
-
-if analyse:
-    if not user_text.strip():
-        st.warning("Please enter a Kikuyu sentence first.")
+st.markdown('### Try a sentence')
+text = st.text_area('Kikuyu text', placeholder='Andika Gĩkũyũ haha…', height=110)
+if st.button('Analyse sentiment', type='primary', use_container_width=True):
+    if not text.strip():
+        st.warning('Please enter a Kikuyu sentence first.')
     else:
-        try:
-            prediction = model.predict([user_text.strip()])[0]
+        pred = model.predict([text.strip()])[0]
+        show(pred)
+        if hasattr(model, 'predict_proba'):
+            proba = model.predict_proba([text.strip()])[0]
+            st.bar_chart(pd.Series(proba, index=model.classes_, name='probability'))
 
-            labels = {
-                "positive": ("😊", "Positive"),
-                "negative": ("😟", "Negative"),
-                "neutral": ("😐", "Neutral")
-            }
+if PREDICTIONS.exists():
+    p = pd.read_csv(PREDICTIONS, dtype=str, keep_default_na=False)
+    p['correct'] = p.label == p.prediction
+    st.divider()
+    st.markdown('### Held-out test examples')
+    st.caption('Real sentences from the test split, never seen in training. Shows what works and what does not.')
+    ok = pd.concat([p[p.correct & (p.label == l)].head(1) for l in ['positive', 'negative', 'neutral']])
+    bad = p[~p.correct].head(2)
+    tab1, tab2 = st.tabs(['✅ Correct predictions', '❌ Real failures'])
+    for tab, rows in ((tab1, ok), (tab2, bad)):
+        with tab:
+            for _, r in rows.iterrows():
+                st.markdown(f"**{r.text}**  \n_{r.english_prompt}_")
+                st.write(f'Human label: `{r.label}` · Model: `{r.prediction}`')
+                st.divider()
 
-            icon, sentiment = labels.get(
-                prediction,
-                ("💬", str(prediction).title())
-            )
-
-            st.markdown("### Analysis result")
-
-            if prediction == "positive":
-                st.success(f"{icon} {sentiment} sentiment")
-            elif prediction == "negative":
-                st.error(f"{icon} {sentiment} sentiment")
-            else:
-                st.info(f"{icon} {sentiment} sentiment")
-
-            st.caption(
-                "This result is a model prediction, not a "
-                "human-verified interpretation."
-            )
-
-        except Exception as error:
-            st.error(f"Prediction failed: {error}")
-
-
-st.divider()
-
-st.markdown("### About KikuyuSent")
-
-st.write(
-    "KikuyuSent is a Team Zeus project developed for the "
-    "Strathmore NLP Hub Datathon 2026, Track B: Sentiment Analysis."
-)
-
-st.write(
-    "The system uses word-level and character-level TF-IDF "
-    "features with Logistic Regression to classify Kikuyu text."
-)
-
-st.caption(
-    "Team Zeus | Strathmore NLP Hub Datathon 2026"
-)
+st.caption('Team Zeus · Strathmore NLP Hub Datathon 2026 · Track B: Sentiment')

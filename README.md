@@ -1,221 +1,79 @@
-# KikuyuSent – Kikuyu Language Sentiment Analysis
+# KikuyuSent: Kikuyu Sentence Sentiment
 
-**Strathmore NLP Hub Datathon 2026 | Team Zeus | Track B**
+**Strathmore NLP Hub Datathon 2026 · Team 5 "Zeus" · Track B (sentiment) · Kikuyu (Gĩkũyũ), `ki-KE`**
 
-KikuyuSent is a sentiment analysis project focused on classifying written Kikuyu (Gĩkũyũ) text into three sentiment categories:
+KikuyuSent classifies a Kikuyu sentence as **positive**, **negative** or **neutral**. We built a new, human-written, independently reviewed dataset of 300 Kikuyu sentences, trained a transparent baseline, and demonstrate it in Streamlit.
 
-- Positive
-- Negative
-- Neutral
+## Results (dataset v1.1, held-out test, evaluated once)
 
-The project aims to contribute to the development of language technology for underrepresented African languages.
+| Model | Test accuracy | Test macro-F1 |
+|---|---|---|
+| Word + character TF-IDF + Logistic Regression | `[TO FILL]` | `[TO FILL]` |
+| Always one label (reference floor) | 0.333 | 0.167 |
 
-## 1. Project Overview
+Per-label F1 · positive `[TO FILL]` · negative `[TO FILL]` · neutral `[TO FILL]`.
+The model was chosen on dev only (`results/dev_model_comparison.csv`). The archived v1 result was accuracy 0.667 / macro-F1 0.664 (`results/v1/`). Both test runs are logged in `logs/test_runs.csv`.
 
-KikuyuSent uses a machine-learning baseline to predict the sentiment expressed in a Kikuyu sentence.
+## Dataset
 
-The project includes:
-- An independently collected and reviewed Kikuyu dataset.
-- Dataset validation.
-- TF-IDF feature extraction.
-- Logistic Regression classification.
-- Model evaluation.
-- A Streamlit demonstration interface.
+| | positive | negative | neutral | total |
+|---|---|---|---|---|
+| train | 60 | 60 | 60 | 180 |
+| dev | 20 | 20 | 20 | 60 |
+| test | 20 | 20 | 20 | 60 |
 
-## 2. Dataset
+- `data/kikuyu_dataset.csv`: starter-kit schema, **passes the official kit validator**.
+- Every sentence was written by a person and independently reviewed by a second fluent speaker (`docs/SOURCE_LOG.md`).
+- Changes from v1 to v1.1 are listed row by row in `logs/v1.1_change_log.csv`. The original v1 file is unchanged in `data/v1/`.
 
-The dataset contains 300 original Kikuyu examples.
+## Run it
 
-| Category | Records |
-|---|---:|
-| Positive | 100 |
-| Negative | 100 |
-| Neutral | 100 |
-| **Total** | **300** |
-
-### Dataset split
-
-| Split | Records |
-|---|---:|
-| Training | 180 |
-| Development | 60 |
-| Testing | 60 |
-| **Total** | **300** |
-
-Each sentiment category is balanced across the three splits.
-
-The examples were independently reviewed by a second Kikuyu speaker.
-
-The dataset uses the following fields:
-
-- `record_id`: Unique record identifier.
-- `text`: Original Kikuyu sentence.
-- `label`: Sentiment classification.
-- `english_prompt`: English meaning or corresponding prompt.
-- `review_status`: Review status.
-- `reviewer_code`: Reviewer identifier.
-- `review_note`: Review notes.
-- `split`: Dataset partition.
-
-Refer to the documentation folder for the dataset card, annotation guide, source log and quality report.
-
-## 3. Project Structure
-
-```text
-KikuyuSent/
-│
-├── app.py
-├── validate.py
-├── train.py
-├── train_baseline.py
-├── train_word_char.py
-├── train_svm.py
-├── evaluate.py
-├── evaluate_svm.py
-├── predict.py
-├── requirements.txt
-├── README.md
-│
-├── data/
-│   └── kikuyu_dataset.csv
-│
-├── docs/
-│   ├── DATASET_CARD.md
-│   ├── ANNOTATION_GUIDE.md
-│   ├── SOURCE_LOG.md
-│   ├── QUALITY_REPORT.md
-│   └── AI_USE_STATEMENT.md
-│
-├── models/
-│   └── sentiment_model.joblib
-│
-└── results/
-    └── test_predictions.csv
-```
-
-Some files may be added or updated as the project develops.
-
-## 4. Technology Stack
-
-- Python
-- Pandas
-- Scikit-learn
-- TF-IDF
-- Logistic Regression
-- Linear SVM (experimental)
-- Joblib
-- Streamlit
-
-## 5. Installation
-
-Clone the repository:
+Python 3.10–3.13.
 
 ```bash
-git clone https://github.com/Craggy-sense/KikuyuSent.git
-cd KikuyuSent
-```
-
-Create a virtual environment:
-
-```bash
-python3 -m venv .venv
-```
-
-Activate it on macOS/Linux:
-
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
+git clone https://github.com/Craggy-sense/KikuyuSent.git && cd KikuyuSent
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-## 6. Running the Project
-
-### Validate the dataset
-
-```bash
-python validate.py
-```
-
-### Train the selected Logistic Regression model
-
-```bash
-python train.py
-```
-
-### Evaluate on the development split
-
-```bash
+python validate.py                       # official kit validator + team checks
+python experiments/compare_on_dev.py     # model comparison on dev (never test)
+python train.py                          # trains SELECTED_MODEL from pipeline.py
 python evaluate.py dev
+python evaluate.py test --final          # test is guarded and every run is logged
+python -m streamlit run app.py           # demo
+python predict.py "Ndĩmũkenu mũno"       # one-off prediction
 ```
 
-### Evaluate on the held-out test split
+To rebuild the dataset from v1 plus the reviewer decisions: `python tools/prepare_dataset.py`.
 
-```bash
-python evaluate.py test
-```
+## Repository map
 
-### Launch the Streamlit application
+| Path | What it is |
+|---|---|
+| `data/kikuyu_dataset.csv` | v1.1 dataset (used by everything) |
+| `data/v1/` | Original v1 data, frozen |
+| `data/provenance_map.csv` | Author, reviewer and method per record range |
+| `review/v1.1_checks.csv` | Reviewer decisions on the 11 rows flagged after v1 |
+| `logs/v1.1_change_log.csv` · `logs/test_runs.csv` | Every data change · every test evaluation |
+| `pipeline.py` | Shared data loading, model definitions, `SELECTED_MODEL` |
+| `validate.py` · `kit/` | Team validator wrapping the official starter-kit validator |
+| `experiments/compare_on_dev.py` | Dev-only model comparison |
+| `train.py` · `evaluate.py` · `predict.py` · `app.py` | Train · evaluate · CLI · Streamlit demo |
+| `models/` | `sentiment_model.joblib` + `model_info.json` (data and model hashes); `models/v1/` archived |
+| `results/` | Metrics JSON, per-label reports, confusion matrices, predictions; `results/v1/` archived |
+| `docs/` | Dataset card, source log, annotation guide, quality report, contributions, AI use |
+| `tools/` | Dataset preparation and submission packaging |
 
-```bash
-streamlit run app.py
-```
+## Demo
 
-The application will provide an interface for entering Kikuyu sentences and viewing predicted sentiment.
+`[TO FILL: link to 2–3 minute demo video]`. The app shows live predictions with label probabilities, the test scores against the always-one-label floor, and real test examples in two tabs: correct predictions and real failures.
 
-## 7. Baseline Model Results
+## Team
 
-The selected word-and-character TF-IDF Logistic Regression model achieved the following results on the held-out test set:
+Robi Memusi · Patriciah Mbua · Mariam Abdi, with an independent fluent Kikuyu reviewer (T05-E1). Roles are in `docs/CONTRIBUTIONS.md`, and AI assistance is described in `docs/AI_USE_STATEMENT.md`.
 
-| Metric | Result |
-|---|---:|
-| Accuracy | 66.67% |
-| Macro F1-score | 0.6639 |
-| Correct predictions | 40/60 |
+## Data use and ethics
 
-### Class-level F1 scores
+Sentences are original contributions used with documented contributor consent; contributor identities and consent forms are kept privately. The model is an experimental prototype and must not be used for decisions about people.
 
-| Sentiment | F1-score |
-|---|---:|
-| Positive | 0.65 |
-| Negative | 0.54 |
-| Neutral | 0.80 |
-
-The model is experimental. Its predictions are not always reliable, particularly where sentiment depends on context, expressions or linguistic nuance.
-
-The test set has already been evaluated and should not be used for further model tuning.
-
-## 8. Team Contributions
-
-Team Zeus is developing KikuyuSent as part of the Strathmore NLP Hub Datathon 2026.
-
-Contributions include:
-- Kikuyu data collection and review.
-- Dataset preparation and validation.
-- Model development and evaluation.
-- Application development.
-- Documentation and reproducibility.
-
-## 9. Reproducibility
-
-Please use the documented dataset split and scripts when reproducing the reported results.
-
-Do not modify independently reviewed labels or use the held-out test set for model tuning.
-
-## 10. Data Use and Ethics
-
-Use the dataset only in accordance with its documented permission and contribution conditions.
-
-Do not publish private contributor information or identifying details.
-
-Any new examples should have a documented source and appropriate permission before being added.
-
-## 11. Current Status
-
-KikuyuSent has a validated 300-record dataset, a trained baseline model, development and test evaluation scripts, and a Streamlit prototype.
-
-Documentation, final repository organisation and demonstration preparation are ongoing.
+Code builds on the Strathmore NLP Hub Datathon starter kit (`kit/`, see `kit/LICENSE_CODE.txt`).

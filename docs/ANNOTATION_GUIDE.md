@@ -29,24 +29,28 @@ Use `neutral` when the text is primarily factual, descriptive or informational a
 
 ## Independent Review
 
-The dataset records that all 300 examples were independently reviewed by a second Kikuyu speaker.
+Every example is reviewed by a fluent Kikuyu speaker who did not write it.
+In the dataset this is recorded as `review_status = independently_reviewed`, with the author in
+`contributor_code` and the reviewer in `reviewer_code` (always different people).
+(v1 used the status text `independently_reviewed_second_speaker_confirmed`; v1.1 uses the starter-kit value.)
 
-The review status used is:
+## Spelling (orthography)
 
-`independently_reviewed_second_speaker_confirmed`
+Keep the author's spelling. Long vowels may be typed as ĩ/ũ (tilde), í/ú (acute), ī/ū (macron) or plain i/u.
+Do not silently "correct" spelling. Any text change goes through `review/v1.1_checks.csv` and is logged.
+
+## Re-review of flagged rows (v1.1)
+
+Rows flagged after v1 (possible meaning/label mismatch, near-duplicate, missing English) are decided by the
+fluent reviewer in `review/v1.1_checks.csv` with one of: `keep`, `fix_label`, `fix_text`, `fix_english`, `replace_text`.
+`tools/prepare_dataset.py` applies the decisions and records each change in `logs/v1.1_change_log.csv`.
 
 ## Dataset Structure
 
 Each record contains:
 
-- record_id
-- text
-- label
-- english_prompt
-- review_status
-- reviewer_code
-- review_note
-- split
+The 15 starter-kit fields plus `english_prompt`, `review_note`, `orthography` and `dataset_version`
+(see `docs/DATASET_CARD.md`).
 
 ## Quality Considerations
 

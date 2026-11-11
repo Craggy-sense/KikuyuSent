@@ -1,0 +1,3 @@
+id_prefix,contributor_code,reviewer_code,source_method,collection_period,confirmed,note
+KIK-PILOT-,T05-A,T05-E1,original_human,2026-11-03/2026-11-05,no,"Pilot rows. CONFIRM author, reviewer and method, then set confirmed=yes"
+KIK-,T05-A,T05-E1,original_human,2026-11-05/2026-11-10,no,"Main rows (POS/NEG/NEU). CONFIRM author, reviewer and method, then set confirmed=yes"
