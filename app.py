@@ -10,6 +10,14 @@ ROOT = Path(__file__).resolve().parent
 MODEL_PATH = ROOT / 'models' / 'sentiment_model.joblib'
 METRICS = ROOT / 'results' / 'test_metrics.json'
 PREDICTIONS = ROOT / 'results' / 'test_predictions.csv'
+# The 5 real test errors analysed in docs/QUALITY_REPORT.md
+WHY = {
+    'KIK-NEU-024': 'Intensifier shortcut: "mũno" (very) appears only in positive/negative training sentences, mostly positive.',
+    'KIK-PILOT-007': 'Negation: "itarĩ njega" means "not good", but the model only sees "njega" (good).',
+    'KIK-POS-205': 'A training sentence shares 5 of these 6 words but means "arrived damaged" (negative).',
+    'KIK-NEG-062': 'Same frame as a positive training sentence ("Rũgendo rũu rwarĩ … mũno"); the negative words are unseen.',
+    'KIK-NEG-278': 'Topic shortcut: "mũthenya" (day) appears only in neutral training sentences; "broke" is unseen.',
+}
 STYLE = {'positive': ('😊', 'Positive', st.success), 'negative': ('😟', 'Negative', st.error),
          'neutral': ('😐', 'Neutral', st.info)}
 
@@ -36,7 +44,7 @@ if METRICS.exists():
     c2.metric('Test macro-F1', f"{m['macro_f1']:.3f}")
     c3.metric('Always-one-label macro-F1', f"{m['majority_baseline']['macro_f1']:.3f}")
     st.caption(f"{m['correct']} of {m['records']} held-out test sentences correct · model: {m['model']}")
-st.warning('Experimental prototype trained on 180 human-written, independently reviewed Kikuyu sentences. '
+st.warning('Experimental prototype trained on 180 human-produced, cross-reviewed Kikuyu sentences. '
            'Predictions can be wrong and are not verified interpretations of Kikuyu.')
 
 
@@ -64,13 +72,15 @@ if PREDICTIONS.exists():
     st.markdown('### Held-out test examples')
     st.caption('Real sentences from the test split, never seen in training. Shows what works and what does not.')
     ok = pd.concat([p[p.correct & (p.label == l)].head(1) for l in ['positive', 'negative', 'neutral']])
-    bad = p[~p.correct].head(2)
+    bad = p[p.record_id.isin(WHY)].set_index('record_id').loc[list(WHY)].reset_index()
     tab1, tab2 = st.tabs(['✅ Correct predictions', '❌ Real failures'])
     for tab, rows in ((tab1, ok), (tab2, bad)):
         with tab:
             for _, r in rows.iterrows():
                 st.markdown(f"**{r.text}**  \n_{r.english_prompt}_")
                 st.write(f'Human label: `{r.label}` · Model: `{r.prediction}`')
+                if r.record_id in WHY:
+                    st.caption('Why: ' + WHY[r.record_id])
                 st.divider()
 
 st.caption('Team Zeus · Strathmore NLP Hub Datathon 2026 · Track B: Sentiment')

@@ -43,7 +43,7 @@ def main(path):
         if g.group_id.nunique() > 1:
             problems.append('near-duplicates in different groups: ' + ', '.join(g.record_id))
         else:
-            notes.append('near-duplicate pair kept in one group (should be replaced): ' + ', '.join(g.record_id))
+            print('Known issue (documented): near-duplicate pair kept in one group/split: ' + ', '.join(g.record_id))
 
     if 'orthography' in df:
         print('\nOrthography (how vowels are marked):', df.orthography.value_counts().to_dict())

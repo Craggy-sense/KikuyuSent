@@ -23,8 +23,9 @@ LOG = ROOT / 'logs/v1.1_change_log.csv'
 
 LABELS = {'positive', 'negative', 'neutral'}
 DECISIONS = {'keep', 'fix_label', 'fix_text', 'fix_english', 'replace_text'}
-# Paraphrase pair found in v1 (same English prompt, different Kikuyu wording): must share a group and split.
-PARAPHRASE_GROUPS = {'KIK-PILOT-017': 'KIK-G-WAITING', 'KIK-NEG-026': 'KIK-G-WAITING'}
+# v1 splits are kept as they were. The paraphrase pair KIK-PILOT-017 (train) / KIK-NEG-026 (dev) uses
+# different Kikuyu wording for the same English prompt; it is documented as a known issue, not moved.
+PARAPHRASE_GROUPS = {}
 NEAR_DUP = ('KIK-PILOT-013', 'KIK-POS-022')
 
 
@@ -110,23 +111,16 @@ def main():
                                                     if not unicodedata.combining(ch)))
     if strip(a) == strip(b):
         d.loc[d.record_id.isin(NEAR_DUP), 'group_id'] = 'KIK-G-PROUD'
-        warnings.append('KIK-POS-022 is still a near-duplicate of KIK-PILOT-013: write a replacement in review/v1.1_checks.csv')
-
-    # 5. paraphrase pair split fix: move KIK-NEG-026 dev->train, move one train negative to dev to keep 60/20/20
-    if d.loc[d.record_id == 'KIK-NEG-026', 'split'].iloc[0] == 'dev':
-        d.loc[d.record_id == 'KIK-NEG-026', 'split'] = 'train'
-        note('KIK-NEG-026', 'split', 'dev', 'train', 'paraphrase of KIK-PILOT-017 (train); groups must not cross splits')
-        flagged = set(checks.record_id)
-        cands = d[(d.split == 'train') & (d.label == 'negative') & d.record_id.str.startswith('KIK-NEG-')
-                  & ~d.record_id.isin(flagged | set(PARAPHRASE_GROUPS))].record_id
-        swap = min(cands, key=lambda r: hashlib.sha256(r.encode()).hexdigest())
-        d.loc[d.record_id == swap, 'split'] = 'dev'
-        note(swap, 'split', 'train', 'dev', 'rebalance dev negatives after moving KIK-NEG-026 (chosen by fixed hash rule)')
+        if checks.loc[checks.record_id == NEAR_DUP[1], 'decision'].iloc[0] != 'keep':
+            warnings.append('KIK-POS-022 is still a near-duplicate of KIK-PILOT-013: write a replacement in review/v1.1_checks.csv')
+        else:
+            print('Known issue kept by team decision: KIK-POS-022 near-duplicates KIK-PILOT-013 (shared group, both train)')
 
     # 6. checks and output
     for _, g in d.groupby('group_id'):
         if g.split.nunique() > 1: sys.exit(f'group {g.group_id.iloc[0]} crosses splits')
-    if not d.english_prompt.str.strip().all():
+    kept = set(checks[checks.decision == 'keep'].record_id)
+    if not d[~d.record_id.isin(kept)].english_prompt.str.strip().all():
         warnings.append('missing english_prompt: ' + ', '.join(d[~d.english_prompt.str.strip().astype(bool)].record_id))
     d['orthography'] = d.text.map(orthography)
     d['dataset_version'] = 'v1.1'

@@ -8,11 +8,12 @@ KikuyuSent classifies a Kikuyu sentence as **positive**, **negative** or **neutr
 
 | Model | Test accuracy | Test macro-F1 |
 |---|---|---|
-| Word + character TF-IDF + Logistic Regression | `[TO FILL]` | `[TO FILL]` |
+| **Word + character TF-IDF + Logistic Regression** | **0.667** (40/60) | **0.664** |
 | Always one label (reference floor) | 0.333 | 0.167 |
 
-Per-label F1 · positive `[TO FILL]` · negative `[TO FILL]` · neutral `[TO FILL]`.
-The model was chosen on dev only (`results/dev_model_comparison.csv`). The archived v1 result was accuracy 0.667 / macro-F1 0.664 (`results/v1/`). Both test runs are logged in `logs/test_runs.csv`.
+Per-label F1: positive 0.65 · negative 0.54 · neutral 0.80. The model was chosen on dev only (dev macro-F1 0.643; `results/dev_model_comparison.csv`).
+v1.1 only cleaned whitespace and added provenance fields. The retrained model predicts identically to v1 on all 300 sentences, so the v1 and v1.1 test runs match. Both are logged in `logs/test_runs.csv`.
+Error analysis (5 real failures: intensifier shortcut, negation, near-identical frames, unseen sentiment words) is in `docs/QUALITY_REPORT.md`.
 
 ## Dataset
 
@@ -23,7 +24,7 @@ The model was chosen on dev only (`results/dev_model_comparison.csv`). The archi
 | test | 20 | 20 | 20 | 60 |
 
 - `data/kikuyu_dataset.csv`: starter-kit schema, **passes the official kit validator**.
-- Every sentence was written by a person and independently reviewed by a second fluent speaker (`docs/SOURCE_LOG.md`).
+- Every sentence was produced by a person (written by the team, collected from conversations, or contributed by invited speakers) from team-written English prompts, then cross-reviewed by someone other than its contributor (`docs/SOURCE_LOG.md`).
 - Changes from v1 to v1.1 are listed row by row in `logs/v1.1_change_log.csv`. The original v1 file is unchanged in `data/v1/`.
 
 ## Run it
@@ -53,7 +54,7 @@ To rebuild the dataset from v1 plus the reviewer decisions: `python tools/prepar
 | `data/kikuyu_dataset.csv` | v1.1 dataset (used by everything) |
 | `data/v1/` | Original v1 data, frozen |
 | `data/provenance_map.csv` | Author, reviewer and method per record range |
-| `review/v1.1_checks.csv` | Reviewer decisions on the 11 rows flagged after v1 |
+| `review/v1.1_checks.csv` | Fluent-speaker decisions on the 11 rows flagged after v1 (all kept) |
 | `logs/v1.1_change_log.csv` · `logs/test_runs.csv` | Every data change · every test evaluation |
 | `pipeline.py` | Shared data loading, model definitions, `SELECTED_MODEL` |
 | `validate.py` · `kit/` | Team validator wrapping the official starter-kit validator |
@@ -66,11 +67,11 @@ To rebuild the dataset from v1 plus the reviewer decisions: `python tools/prepar
 
 ## Demo
 
-`[TO FILL: link to 2–3 minute demo video]`. The app shows live predictions with label probabilities, the test scores against the always-one-label floor, and real test examples in two tabs: correct predictions and real failures.
+The 2–3 minute demo video is submitted with the entry through the NLP Hub channel. The app shows live predictions with label probabilities, the test scores against the always-one-label floor, and real test examples in two tabs: correct predictions and real failures.
 
 ## Team
 
-Robi Memusi · Patriciah Mbua · Mariam Abdi, with an independent fluent Kikuyu reviewer (T05-E1). Roles are in `docs/CONTRIBUTIONS.md`, and AI assistance is described in `docs/AI_USE_STATEMENT.md`.
+Robi Memusi · Patriciah Mbua · Mariam Abdi, with Kikuyu-speaking contributors and outside reviewers. Roles are in `docs/CONTRIBUTIONS.md`, and AI assistance is described in `docs/AI_USE_STATEMENT.md`.
 
 ## Data use and ethics
 

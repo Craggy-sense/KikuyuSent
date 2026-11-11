@@ -9,5 +9,14 @@ KIK-NEG-041,whitespace,'Thimu yakwa iratigire kuruta wira mahida maria ndiramiba
 KIK-NEG-197,whitespace,'Maríhi matinakinyaníra ','Maríhi matinakinyaníra',"removed extra/leading/trailing spaces, tabs or line breaks"
 KIK-NEG-230,whitespace,'Duka (nduka)\tyuuma hinge ríría nginyire. ','Duka (nduka) yuuma hinge ríría nginyire.',"removed extra/leading/trailing spaces, tabs or line breaks"
 KIK-NEU-300,whitespace,'Mucemanio úrambíríria thaa kenda na nuthu. ','Mucemanio úrambíríria thaa kenda na nuthu.',"removed extra/leading/trailing spaces, tabs or line breaks"
-KIK-NEG-026,split,dev,train,paraphrase of KIK-PILOT-017 (train); groups must not cross splits
-KIK-NEG-110,split,train,dev,rebalance dev negatives after moving KIK-NEG-026 (chosen by fixed hash rule)
+KIK-POS-022,checked_kept,,,T05-A: Kept as written by team decision. Known near-duplicate of KIK-PILOT-013 (both in train); documented in QUALITY_REPORT.
+KIK-NEG-107,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-POS-082,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEG-122,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-POS-256,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEU-084,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEU-066,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEU-213,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEU-081,checked_kept,,,T05-A: Checked by fluent team speaker (T05-A): sentence and label are correct as written; no change.
+KIK-NEG-230,checked_kept,,,T05-A: Kept as written by team decision (author gave both spellings Duka/Nduka). Tab removed by whitespace cleanup.
+KIK-POS-130,checked_kept,,,T05-A: Kept as written; English meaning was not recorded in the team sheet.
