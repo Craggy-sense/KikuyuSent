@@ -54,3 +54,14 @@ Listed row by row in `logs/v1.1_change_log.csv`:
 - No label, sentence or split changed.
 
 The original v1 file is kept unchanged in `data/v1/kikuyu_dataset_v1.csv`.
+
+## Supplementary batch (KIK-301 … KIK-360)
+
+| Field | Value |
+|---|---|
+| Records | 60 (20 positive, 20 negative, 20 neutral) |
+| Produced | 12 Nov 2026 by the Team 5 contributor pool (`T05-POOL`), using the same process as above: team-written English prompts, Kikuyu sentences produced by people. No machine translation or AI. |
+| Review | Approved by a Kikuyu reviewer and an independent second speaker (sheet: `TWO_SPEAKER_APPROVAL`, recorded as `T05-XREV2`) |
+| Files | `data/supplementary/kikuyu_supplementary_batches_301_360.xlsx` (team sheet export, unchanged); `data/supplementary/kikuyu_supplementary.csv` (kit schema, `source_version = supplementary-v1`) |
+| Use | First a one-time fresh held-out evaluation (`results/heldout/`), then training data for model v2 |
+| Permission | Same contributor agreement as the main set |
