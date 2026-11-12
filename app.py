@@ -1,5 +1,6 @@
 """KikuyuSent demo. Run: python -m streamlit run app.py"""
 import json
+import sys
 from pathlib import Path
 
 import joblib
@@ -7,7 +8,10 @@ import pandas as pd
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))  # the experimental model uses experiments/kikuyu_text.py
 MODEL_PATH = ROOT / 'models' / 'sentiment_model.joblib'
+EXP_PATH = ROOT / 'models' / 'kikuyusent_v2.joblib'
+HELDOUT = ROOT / 'results' / 'heldout' / 'heldout_metrics.json'
 METRICS = ROOT / 'results' / 'test_metrics.json'
 PREDICTIONS = ROOT / 'results' / 'test_predictions.csv'
 # The 5 real test errors analysed in docs/QUALITY_REPORT.md
@@ -31,20 +35,36 @@ if not MODEL_PATH.exists():
 
 
 @st.cache_resource
-def load_model():
-    return joblib.load(MODEL_PATH)
+def load_model(path):
+    return joblib.load(path)
 
 
-model = load_model()
+OFFICIAL = 'Official model (submitted)'
+EXPERIMENTAL = 'Improved model v2 (Kikuyu-aware)'
+choice = OFFICIAL
+if EXP_PATH.exists():
+    choice = st.sidebar.radio('Model', [EXPERIMENTAL, OFFICIAL])
+    if HELDOUT.exists():
+        h = json.loads(HELDOUT.read_text(encoding='utf-8'))
+        st.sidebar.markdown('**Fresh held-out test** (60 new sentences, scored once)')
+        st.sidebar.table(pd.DataFrame({
+            'accuracy': [f"{h['experimental']['accuracy']:.1%}", f"{h['official']['accuracy']:.1%}"],
+            'macro-F1': [f"{h['experimental']['macro_f1']:.3f}", f"{h['official']['macro_f1']:.3f}"]},
+            index=['Improved setup', 'Official']))
+    st.sidebar.caption('**Improved v2:** fluent-speaker vowel/spelling standardisation + negation marking '
+                       '(e.g. *itarĩ njega* = "not good"). Its setup was trained on 240 sentences and scored once on '
+                       '60 fresh ones; the demo model is then retrained on all 360.')
+    st.sidebar.caption('**Official:** the submitted model (180 training sentences), test 66.7% / macro-F1 0.664.')
+model = load_model(EXP_PATH if choice == EXPERIMENTAL else MODEL_PATH)
 
 if METRICS.exists():
     m = json.loads(METRICS.read_text(encoding='utf-8'))
     c1, c2, c3 = st.columns(3)
-    c1.metric('Test accuracy', f"{m['accuracy']:.1%}")
-    c2.metric('Test macro-F1', f"{m['macro_f1']:.3f}")
+    c1.metric('Official test accuracy', f"{m['accuracy']:.1%}")
+    c2.metric('Official test macro-F1', f"{m['macro_f1']:.3f}")
     c3.metric('Always-one-label macro-F1', f"{m['majority_baseline']['macro_f1']:.3f}")
     st.caption(f"{m['correct']} of {m['records']} held-out test sentences correct · model: {m['model']}")
-st.warning('Experimental prototype trained on 180 human-produced, cross-reviewed Kikuyu sentences. '
+st.warning('Experimental prototype trained on human-produced, cross-reviewed Kikuyu sentences. '
            'Predictions can be wrong and are not verified interpretations of Kikuyu.')
 
 
@@ -61,6 +81,7 @@ if st.button('Analyse sentiment', type='primary', use_container_width=True):
     else:
         pred = model.predict([text.strip()])[0]
         show(pred)
+        st.caption(f'Model: {choice}')
         if hasattr(model, 'predict_proba'):
             proba = model.predict_proba([text.strip()])[0]
             st.bar_chart(pd.Series(proba, index=model.classes_, name='probability'))
@@ -70,7 +91,8 @@ if PREDICTIONS.exists():
     p['correct'] = p.label == p.prediction
     st.divider()
     st.markdown('### Held-out test examples')
-    st.caption('Real sentences from the test split, never seen in training. Shows what works and what does not.')
+    st.caption('Official model on real sentences from the test split, never seen in training. '
+               'Shows what works and what does not.')
     ok = pd.concat([p[p.correct & (p.label == l)].head(1) for l in ['positive', 'negative', 'neutral']])
     bad = p[p.record_id.isin(WHY)].set_index('record_id').loc[list(WHY)].reset_index()
     tab1, tab2 = st.tabs(['✅ Correct predictions', '❌ Real failures'])

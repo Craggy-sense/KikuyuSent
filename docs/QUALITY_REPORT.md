@@ -109,3 +109,24 @@ The v1.1 dataset passes the official starter-kit validator, has complete provena
 - **Learning curve** (normalised model, same CV): 48 → 0.551, 96 → 0.637, 144 → 0.676, 192 → 0.705 macro-F1. The score is still rising about 3 points per 50 sentences, so **more human-written data is the main lever**.
 
 **Next version (v2):** adopt setup E, train on train + dev, and collect a new, untouched test set to measure it fairly.
+
+## 9. Fresh held-out evaluation and improved model v2
+
+**New data.** On 12 Nov the team produced **60 supplementary sentences** (`KIK-NEG/NEU/POS-301…360`, 20 per label). Each was approved by a Kikuyu reviewer and an independent second speaker (`data/supplementary/`). None overlaps the 300 (no duplicates, near-duplicates or shared English prompts). Together, all 360 pass the official kit validator.
+
+**One-time fair comparison.** Both models were trained **before** these sentences existed: the official model on 11 Nov (train, 180), the improved setup E from §8 on 12 Nov 12:43 (train + dev, 240). Each was scored **once** on the 60 fresh sentences (`experiments/evaluate_heldout.py`, `results/heldout/`, logged in `logs/test_runs.csv`).
+
+| Model | Accuracy | Macro-F1 | F1 pos / neg / neu |
+|---|---|---|---|
+| Official (submitted) | 0.667 (40/60) | 0.671 | 0.59 / 0.53 / 0.89 |
+| **Improved setup E** (Kikuyu-aware, 240 sentences) | **0.700 (42/60)** | **0.699** | 0.62 / 0.58 / 0.90 |
+| Always one label | 0.333 | 0.167 | — |
+
+**What this shows:**
+- **The official result generalises.** On brand-new sentences the official model scores 0.667, exactly its test accuracy.
+- **The cross-validation estimate was accurate.** Setup E's fresh-set macro-F1 (0.699) matches its CV estimate (0.699).
+- **The improvement is real but modest.** E fixes 4 sentences the official model got wrong and breaks 2 (net +2 of 60). With 60 sentences this is a consistent direction, not a statistically large gap.
+- **Positive↔negative confusion is still the main error** (14 of 18 errors). Only 1 of the 60 contains a negator, so this set says little about negation specifically.
+- The supplementary sentences are mostly first-person feelings (positive/negative) and object or place statements (neutral), so the style differs a little from the main set.
+
+**Improved model v2 (demo).** After the one-time evaluation, setup E was retrained on **all 360 sentences** (`experiments/train_final_v2.py` → `models/kikuyusent_v2.joblib`). This is the default model in the demo app. Its fair score is the held-out result above; once all 360 sentences are used, no unseen data remains to score v2 itself. The official submitted model and its test result (§4) are unchanged.

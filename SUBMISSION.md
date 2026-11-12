@@ -13,4 +13,5 @@
 1. **(20 s) Intro.** "We are Team 5, Zeus. KikuyuSent classifies Kikuyu sentences as positive, negative or neutral. We built 300 new Kikuyu sentences, written, collected and contributed by speakers, and cross-reviewed."
 2. **(60 s) Three live predictions** that work: `Ndĩmũkenu mũno` (positive), `Ndĩ mũrakaru mũno.` (negative), `Duka ĩrĩ hakuhĩ na benki.` (neutral). Point at the probability bars.
 3. **(45 s) Open the "Real failures" tab.** Show `Mwana akomete mũno` ("the child is sleeping deeply", neutral → positive): the word *mũno* ("very") mostly appears in positive training sentences. Show a negation failure: *itarĩ njega* ("not good") predicted positive.
-4. **(20 s) Close.** "66.7% accuracy and 0.664 macro-F1 on held-out test, against 0.167 for always guessing one label. Next: more contributors, more negation examples."
+4. **(30 s) Improved model.** In the sidebar, show the fresh-test table (improved 70.0% vs official 66.7% on 60 new sentences). Type `Irio icio itarĩ njega` ("that food is not good") with the improved model: Negative. Explain the negation marking and vowel-spelling standardisation chosen by a fluent speaker.
+5. **(20 s) Close.** "66.7% accuracy and 0.664 macro-F1 on held-out test, against 0.167 for always guessing one label. Next: more contributors, more negation examples."

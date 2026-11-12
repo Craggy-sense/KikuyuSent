@@ -73,4 +73,5 @@ Judging real people or communities, moderation, or any automated decision about 
 | Version | Date | Notes |
 |---|---|---|
 | v1 | 11 Nov 2026 | First complete set. Test evaluated once (accuracy 0.667, macro-F1 0.664). Archived in `data/v1/` and `results/v1/`. |
+| supplementary-v1 | 12 Nov 2026 | 60 new two-speaker-approved sentences (KIK-301…360, 20 per label) in `data/supplementary/`. Used once as a fresh held-out set, then to train model v2. All 360 pass the kit validator. |
 | v1.1 | 11 Nov 2026 | Starter-kit schema and provenance fields, whitespace cleanup, 11 flagged rows re-checked (all kept). Same splits; identical predictions and scores. |
