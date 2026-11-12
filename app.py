@@ -30,11 +30,11 @@ LABEL = {'positive': ('😊', 'Positive', 'The writer sounds pleased or approvin
 EXAMPLES = ['Ndĩmũkenu mũno', 'Irio icio itarĩ njega', 'Duka ĩrĩ hakuhĩ na benki.']
 
 THEMES = {
-    'dark': dict(bg='#0f1117', surface='#1a1d27', surface2='#232736', text='#e8e9ee', muted='#9aa0b0',
+    'dark': dict(track='#4a5064', bg='#0f1117', surface='#1a1d27', surface2='#232736', text='#e8e9ee', muted='#9aa0b0',
                  border='#2e3344', accent='#e5484d', accent_text='#ffffff', input='#232736',
                  pos='#3dd68c', pos_bg='rgba(61,214,140,.12)', neg='#ff6369', neg_bg='rgba(255,99,105,.12)',
                  neu='#8fb3ff', neu_bg='rgba(143,179,255,.12)', warn_bg='rgba(255,197,61,.10)', warn='#ffc53d'),
-    'light': dict(bg='#f7f7f9', surface='#ffffff', surface2='#f0f1f5', text='#1c1f26', muted='#5f6675',
+    'light': dict(track='#b8bdc9', bg='#f7f7f9', surface='#ffffff', surface2='#f0f1f5', text='#1c1f26', muted='#5f6675',
                   border='#e1e3ea', accent='#d93036', accent_text='#ffffff', input='#ffffff',
                   pos='#1a7f4b', pos_bg='rgba(26,127,75,.09)', neg='#c62a2f', neg_bg='rgba(198,42,47,.08)',
                   neu='#2f5bd3', neu_bg='rgba(47,91,211,.08)', warn_bg='rgba(176,120,0,.09)', warn='#8a5a00'),
@@ -73,6 +73,12 @@ button[data-baseweb="tab"][aria-selected="true"] p {{ color: {T['text']}; font-w
 [data-baseweb="tab-highlight"] {{ background: {T['accent']}; }}
 [data-baseweb="tab-border"] {{ background: {T['border']}; }}
 .stApp code {{ background: {T['surface2']}; color: {T['text']}; }}
+[data-testid="stSidebar"] label[data-baseweb="checkbox"] > div:first-child {{
+  background: {T['track']} !important; border: 1px solid {T['border']}; }}
+[data-testid="stSidebar"] label[data-baseweb="checkbox"]:has(input:checked) > div:first-child {{
+  background: {T['accent']} !important; border-color: {T['accent']}; }}
+[data-testid="stSidebar"] label[data-baseweb="checkbox"] > div:first-child > div {{
+  background: #ffffff !important; box-shadow: 0 1px 3px rgba(0,0,0,.35); }}
 .ks-hero h1 {{ font-size: 2.6rem; margin: 0; padding: 0; line-height: 1.15; }}
 .ks-hero h2 {{ font-size: 1.3rem; font-weight: 600; margin: .3rem 0 .1rem; padding: 0; color: {T['muted']} !important; }}
 .ks-badges {{ display: flex; flex-wrap: wrap; gap: 6px; margin: .6rem 0 1rem; }}
