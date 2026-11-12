@@ -80,3 +80,32 @@ Each explanation uses the model's own feature weights (which words pushed it tow
 ## 7. Conclusion
 
 The v1.1 dataset passes the official starter-kit validator, has complete provenance fields and a row-by-row change log. Every test evaluation is logged. The baseline doubles the always-one-label accuracy (0.667 vs 0.333; macro-F1 0.664 vs 0.167). Its errors come from surface cues and negation, which points directly at what data to collect next.
+
+## 8. Post-freeze experiment: Kikuyu-aware preprocessing (cross-validation only)
+
+**Not part of the submitted model.** The submitted model and its test result (§4) are unchanged. The test set was **not** used in this experiment: everything below is 10 × 5-fold group-aware cross-validation on the 240 train + dev sentences (`experiments/cv_kikuyu_features.py`, results in `results/experiments/cv_kikuyu_features.csv`).
+
+**Why.** Dev errors were mostly positive↔negative swaps (16 of 22), several involving negation, and the training data mixes vowel spellings.
+
+**Language decisions by a fluent speaker (T05-A):**
+- Kikuyu has seven vowels. **ĩ ≠ i and ũ ≠ u** are different sounds, so they are never merged. An early version that stripped all vowel marks scored higher (0.705) but merges different words, so it was **rejected on linguistic grounds**.
+- Only keyboard substitutes are mapped: í, ī → ĩ and ú, ū → ũ.
+- 25 candidate spelling pairs were reviewed. **16 were confirmed as missing-tilde typos** (e.g. *muno → mũno*, `data/spelling_map.csv`), and **9 were judged different words and kept apart** (e.g. *mũrũ / mũru*, *iria / ĩrĩa*, `data/spelling_pairs_kept_distinct.csv`).
+- **A negator list was confirmed** (e.g. *ti*, *ndirĩ*, *itarĩ*, *matarĩ*, *gũtirĩ*, `data/negators.csv`). Words in the two positions after a negator are tagged, so *itarĩ njega* ("not good") no longer looks like *njega* ("good").
+
+| | Setup | CV macro-F1 (± s.e.) | CV accuracy |
+|---|---|---|---|
+| A | Submitted model (no Kikuyu preprocessing), C = 1 | 0.655 ± 0.009 | 0.660 |
+| B | Same, C = 10 | 0.662 ± 0.009 | 0.667 |
+| C | Keyboard vowel variants mapped, C = 10 | 0.679 ± 0.009 | 0.683 |
+| D | + fluent-speaker spelling map, C = 10 | 0.679 ± 0.009 | 0.683 |
+| E | **+ negation marking, C = 10** | **0.699 ± 0.009** | **0.702** |
+
+**Findings:**
+- Linguistically correct preprocessing gains **+4.4 macro-F1 points** over the submitted setup (A → E).
+- Mapping keyboard variants gives +1.7; negation marking gives +2.0.
+- The spelling map adds nothing measurable: those words are rare, and character n-grams already partly bridge them.
+- **Caveat:** 20 of the 22 sentences containing a negator are labelled negative, so the negation tag may partly act as a "negative" cue. That would be a shortcut rather than an understanding of scope. Adding negated sentences to the positive and neutral classes (e.g. *ti mũru*, "not bad") is the next data-collection step.
+- **Learning curve** (normalised model, same CV): 48 → 0.551, 96 → 0.637, 144 → 0.676, 192 → 0.705 macro-F1. The score is still rising about 3 points per 50 sentences, so **more human-written data is the main lever**.
+
+**Next version (v2):** adopt setup E, train on train + dev, and collect a new, untouched test set to measure it fairly.
