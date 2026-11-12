@@ -13,7 +13,7 @@ KikuyuSent classifies a Kikuyu sentence as **positive**, **negative** or **neutr
 
 Per-label F1: positive 0.65 · negative 0.54 · neutral 0.80. The model was chosen on dev only (dev macro-F1 0.643; `results/dev_model_comparison.csv`).
 v1.1 only cleaned whitespace and added provenance fields. The retrained model predicts identically to v1 on all 300 sentences, so the v1 and v1.1 test runs match. Both are logged in `logs/test_runs.csv`.
-**Improved model v2 (Kikuyu-aware).** On **60 fresh sentences** written and reviewed on 12 Nov (`KIK-301…360`), scored once: improved setup **70.0% accuracy / 0.699 macro-F1** vs official 66.7% / 0.671 (`docs/QUALITY_REPORT.md` §9). The demo's default model v2 uses this setup retrained on all 360 sentences.
+**Improved model v2 (Kikuyu-aware).** On **60 fresh sentences** written and reviewed on 12 Nov (`KIK-301…360`), scored once: improved setup **70.0% accuracy / 0.699 macro-F1** vs official 66.7% / 0.671 (`docs/QUALITY_REPORT.md` §9). The demo app runs a single model, v2: this setup retrained on all 360 sentences.
 Post-freeze experiment (cross-validation only, test untouched): Kikuyu-aware preprocessing using fluent-speaker spelling and negator lists raises CV macro-F1 from 0.655 to 0.699 (`docs/QUALITY_REPORT.md` §8).
 Error analysis (5 real failures: intensifier shortcut, negation, near-identical frames, unseen sentiment words) is in `docs/QUALITY_REPORT.md`.
 
