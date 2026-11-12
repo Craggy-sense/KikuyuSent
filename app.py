@@ -27,6 +27,7 @@ STYLE = {'positive': ('😊', 'Positive', st.success), 'negative': ('😟', 'Neg
 
 st.set_page_config(page_title='KikuyuSent | Team Zeus', page_icon='💬', layout='centered')
 st.title('💬 KikuyuSent')
+st.caption('**Team 5 (Zeus)** · Working language: **Kikuyu (Gĩkũyũ)** · Track B: sentiment · Status: **prototype**')
 st.subheader('Kikuyu (Gĩkũyũ) sentence sentiment: positive, negative or neutral')
 
 if not MODEL_PATH.exists():
@@ -68,9 +69,15 @@ st.warning('Experimental prototype trained on human-produced, cross-reviewed Kik
            'Predictions can be wrong and are not verified interpretations of Kikuyu.')
 
 
-def show(pred):
+SUMMARY = {'positive': 'The writer sounds pleased or approving.',
+           'negative': 'The writer sounds unhappy, critical or upset.',
+           'neutral': 'The sentence states a fact without a clear opinion.'}
+
+
+def show(pred, conf=None):
     icon, name, box = STYLE.get(pred, ('💬', str(pred).title(), st.info))
-    box(f'{icon} **{name}**')
+    extra = f' (model score {conf:.0%}, uncalibrated)' if conf is not None else ''
+    box(f'{icon} **{name}**{extra}  \n{SUMMARY.get(pred, "")}')
 
 
 st.markdown('### Try a sentence')
@@ -80,11 +87,26 @@ if st.button('Analyse sentiment', type='primary', use_container_width=True):
         st.warning('Please enter a Kikuyu sentence first.')
     else:
         pred = model.predict([text.strip()])[0]
-        show(pred)
-        st.caption(f'Model: {choice}')
-        if hasattr(model, 'predict_proba'):
-            proba = model.predict_proba([text.strip()])[0]
-            st.bar_chart(pd.Series(proba, index=model.classes_, name='probability'))
+        proba = model.predict_proba([text.strip()])[0] if hasattr(model, 'predict_proba') else None
+        show(pred, None if proba is None else float(max(proba)))
+        st.caption(f'Model: {choice}. Sentiment of the sentence only: not emotion detection or a measure of '
+                   "anyone's mental state. The model always picks one of the three labels, even for text it "
+                   'cannot handle (e.g. English or very long sentences).')
+        if proba is not None:
+            st.caption('Model scores per label (uncalibrated: not true probabilities)')
+            st.bar_chart(pd.Series(proba, index=model.classes_, name='uncalibrated score'))
+
+with st.expander('📊 Dataset contribution and evaluation summary'):
+    st.markdown(
+        '- **360 new Kikuyu sentences** produced by people (written by the team, collected from conversations, '
+        'or contributed by invited speakers) and cross-reviewed by someone other than the contributor.\n'
+        '- **Main set (300):** 100 positive · 100 negative · 100 neutral; train 180 / dev 60 / test 60. '
+        'Passes the official starter-kit validator.\n'
+        '- **Supplementary set (60):** 20 per label, approved by two speakers. Used once as a fresh '
+        'held-out test, then to train model v2.\n'
+        '- **Official model:** test accuracy 66.7%, macro-F1 0.664 (always-one-label: 0.167).\n'
+        '- **Improved setup:** 70.0% / 0.699 on the 60 fresh sentences vs 66.7% / 0.671 for the official model.\n'
+        '- Full details: `docs/QUALITY_REPORT.md`, `results/`, `docs/DATASET_CARD.md`.')
 
 if PREDICTIONS.exists():
     p = pd.read_csv(PREDICTIONS, dtype=str, keep_default_na=False)
@@ -95,7 +117,12 @@ if PREDICTIONS.exists():
                'Shows what works and what does not.')
     ok = pd.concat([p[p.correct & (p.label == l)].head(1) for l in ['positive', 'negative', 'neutral']])
     bad = p[p.record_id.isin(WHY)].set_index('record_id').loc[list(WHY)].reset_index()
-    tab1, tab2 = st.tabs(['✅ Correct predictions', '❌ Real failures'])
+    tab1, tab2, tab3 = st.tabs(['✅ Correct predictions', '❌ Real failures', '🚫 Unsupported input'])
+    with tab3:
+        st.markdown('The model only knows Kikuyu sentences like those in its training data. '
+                    'It still forces one of the three labels for anything else:')
+        for ex in ['The weather is nice today.', '12345', 'Habari yako?']:
+            st.write(f'`{ex}` → model says **{model.predict([ex])[0]}** (meaningless: unsupported input)')
     for tab, rows in ((tab1, ok), (tab2, bad)):
         with tab:
             for _, r in rows.iterrows():

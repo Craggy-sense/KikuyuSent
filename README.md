@@ -84,6 +84,12 @@ The 2–3 minute demo video is submitted with the entry through the NLP Hub chan
 
 Robi Memusi · Patriciah Mbua · Mariam Abdi, with Kikuyu-speaking contributors and outside reviewers. Roles are in `docs/CONTRIBUTIONS.md`, and AI assistance is described in `docs/AI_USE_STATEMENT.md`.
 
+## Reuse, licences and data release
+
+- **Reused:** starter kit v2 code (`kit/`, licence in `kit/LICENSE_CODE.txt`); our scripts adapt its structure. No external dataset was used; all 360 sentences are new contributions.
+- **Team code:** shared for datathon assessment under the starter kit's terms.
+- **Data release:** contributors agreed to use for the submission and assessment. Wider public release is a pending decision with the NLP Hub.
+
 ## Data use and ethics
 
 Sentences are original contributions used with documented contributor consent; contributor identities and consent forms are kept privately. The model is an experimental prototype and must not be used for decisions about people.

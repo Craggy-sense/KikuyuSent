@@ -16,6 +16,7 @@
 ## 2. Review process
 
 1. **Collection review.** Every row was reviewed by someone other than its contributor: team members cross-reviewed rows they had not produced, and outside fluent Kikuyu speakers also reviewed. Reviewers are recorded as a pool (`T05-XREV`), not per row.
+   Individual review disagreements and exclusions during collection were not logged separately (no exclusion log was kept). This is a known gap; future batches will log them.
 2. **v1.1 re-check.** An automated comparison of each Kikuyu sentence with its English prompt flagged 11 rows: possible meaning or label mismatches, a near-duplicate, a bracketed alternative spelling and a missing English prompt. Robi (T05-A, fluent) re-checked all 11 and confirmed every sentence and label as correct, so none was changed (`review/v1.1_checks.csv`). The automated flags came from a non-speaker comparing against the English, and the fluent speaker's judgement prevails.
 
 ## 3. Model selection (dev only)
