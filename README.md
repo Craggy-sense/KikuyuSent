@@ -13,6 +13,7 @@ KikuyuSent classifies a Kikuyu sentence as **positive**, **negative** or **neutr
 
 Per-label F1: positive 0.65 · negative 0.54 · neutral 0.80. The model was chosen on dev only (dev macro-F1 0.643; `results/dev_model_comparison.csv`).
 v1.1 only cleaned whitespace and added provenance fields. The retrained model predicts identically to v1 on all 300 sentences, so the v1 and v1.1 test runs match. Both are logged in `logs/test_runs.csv`.
+**Improved model v2 (Kikuyu-aware).** On **60 fresh sentences** written and reviewed on 12 Nov (`KIK-301…360`), scored once: improved setup **70.0% accuracy / 0.699 macro-F1** vs official 66.7% / 0.671 (`docs/QUALITY_REPORT.md` §9). The demo's default model v2 uses this setup retrained on all 360 sentences.
 Post-freeze experiment (cross-validation only, test untouched): Kikuyu-aware preprocessing using fluent-speaker spelling and negator lists raises CV macro-F1 from 0.655 to 0.699 (`docs/QUALITY_REPORT.md` §8).
 Error analysis (5 real failures: intensifier shortcut, negation, near-identical frames, unseen sentiment words) is in `docs/QUALITY_REPORT.md`.
 
@@ -48,12 +49,21 @@ python predict.py "Ndĩmũkenu mũno"       # one-off prediction
 
 To rebuild the dataset from v1 plus the reviewer decisions: `python tools/prepare_dataset.py`.
 
+Improved model v2 (already run; the held-out step refuses to run twice):
+```bash
+python tools/prepare_supplementary.py          # 60 supplementary sentences -> kit schema
+python experiments/train_experimental.py       # setup E on train+dev (240)
+python experiments/evaluate_heldout.py --final # one-time fresh evaluation (official vs improved)
+python experiments/train_final_v2.py           # setup E on all 360 -> models/kikuyusent_v2.joblib
+```
+
 ## Repository map
 
 | Path | What it is |
 |---|---|
 | `data/kikuyu_dataset.csv` | v1.1 dataset (used by everything) |
 | `data/v1/` | Original v1 data, frozen |
+| `data/supplementary/` | 60 supplementary sentences (KIK-301…360), the fresh held-out set, then used to train v2 |
 | `data/provenance_map.csv` | Author, reviewer and method per record range |
 | `review/v1.1_checks.csv` | Fluent-speaker decisions on the 11 rows flagged after v1 (all kept) |
 | `logs/v1.1_change_log.csv` · `logs/test_runs.csv` | Every data change · every test evaluation |
